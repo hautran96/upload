@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="message_problem_connect_to_server">Kết nối đến máy chủ có vấn đề</string>
+    <string name="message_no_internet_connection">Không có kết nối internet. Xin hãy kiểm tra kết nối internet</string>
+    <string name="msg_network_warning">Mất kết nối do tín hiệu 3G/wifi yếu hoặc không có!\nVui lòng thử lại lần sau.</string>
+</resources>

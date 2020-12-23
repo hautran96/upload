@@ -1,0 +1,3 @@
+include ':myupload'
+include ':app'
+rootProject.name = "uploadExample"
