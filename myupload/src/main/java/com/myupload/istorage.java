@@ -8,7 +8,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.listener.AsyncTaskCompleteListener;
-import com.listener.onGetLinkResults;
 import com.service.PingHostTask;
 import com.utils.Common;
 import com.utils.Constant;
@@ -28,39 +27,43 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class upload {
+public class istorage {
     Context context;
     private String mPath;
-    private String mApikey = "84150322d3da7640b7d62825b2f8d0a45f3f3b57";
-    private String mLinkRespone;
+    private String mApikey = "1207d55d8a880040c5ee587b8fef09487043150e";
     private String mFileKey;
     private static final String SCHEMA = "http";
     private static final String HOST_ISTORAGE = Constant.HOST;
     private static final String PATH_GET_TOKEN = "api/partner/getAccessToken";
     private static final String PATH_GET_LINK = "api/partner/getFileByKey";
     private static final int PORT = 0;
+    private String mLinkRespone;
     public final int TIME_OUT_UPLOAD = 720 * 1000; // 12 minutes
 
-    public upload (Context context){
+    public istorage(Context context){
         this.context = context;
     }
 
-    public upload setLinkFile(String mPath){
+    public istorage setLinkFile(String mPath){
         this.mPath = mPath;
         return this;
     }
 
-    public upload setToken(String token){
+    public istorage setToken(String token){
         this.mApikey = token;
         return this;
     }
 
-    public String upload(){
+    public istorage setFileKey(String fileKey){
+        this.mFileKey = fileKey;
+        return this;
+    }
+
+    public void upload(){
         if(mPath != null){
-            AsyncUpload mAsyncUpload = new AsyncUpload(mPath, mApikey);
+            AsyncUpload mAsyncUpload = new AsyncUpload(mPath, mApikey, null);
             mAsyncUpload.execute();
-            Log.i(Constant.TAG, "upload mPath "+ mPath + "upload mApikey " + mApikey + "file_key" + file_key);
-//            getTokenUpload(context);
+            Log.i(Constant.TAG, "upload mPath "+ mPath + "upload mApikey " + mApikey);
         } else  {
             Toast.makeText(context, "upload " + mPath, Toast.LENGTH_LONG).show();
         }
@@ -68,79 +71,69 @@ public class upload {
 
 
     public String getLink(){
-        return "";
-    }
-
-    private class UploadTimerCountDown extends CountDownTimer {
-        private UploadTimerCountDown(long millisInFuture, long countDownInterval) {
-            super(millisInFuture, countDownInterval);
-        }
-
-        @Override
-        public void onTick(long l) {
-        }
-
-        @Override
-        public void onFinish() {
-            if(Common.isNetworkAvailable(context)) {
-                PingHostTask pingHostTask = new PingHostTask(context, new AsyncTaskCompleteListener<Boolean>() {
-                    @Override
-                    public void onTaskComplete(Boolean result) {
-//                        if (result) {
-//                            mStatus = getString(R.string.msg_network_warning);
-//                        } else {
-//                            mStatus = getString(R.string.message_problem_connect_to_server);
-//                        }
-//                        stopSelf();
-//                        // send broadcast after upload
-//                        Intent intent = new Intent();
-//                        intent.setAction(Constant.ACTION_UPLOAD);
-//
-//                        intent.putExtra(Constant.API_ERROR_CODE, -1);
-//                        intent.putExtra(Constant.STATUS, mStatus);
-//                        getApplicationContext().sendBroadcast(intent);
+        if(mFileKey != null){
+            Log.i(Constant.TAG, "onPostExecute mPath "+ mPath + "onPostExecute mApikey " + mApikey + " file_key " + mFileKey);
+            HashMap<String, String> mapQueryParameters = new HashMap<>();
+            mapQueryParameters.put(Constant.QUERY_FILE_KEY, mFileKey);
+            HttpUtils.requestGETMethod(context, SCHEMA, HOST_ISTORAGE, PORT, PATH_GET_LINK, mapQueryParameters, mApikey , new HttpUtils.GetDataCompleted() {
+                @Override
+                public void onCompleted(int code, String msg, Object data) {
+                    handleGetLinkByKey(code, data);
+                    if(data != null){
+                        try {
+                            JSONObject dataResult = ((JSONObject) data).getJSONObject(Constant.API_RESULTS);
+                            if(code == 0){
+                                mLinkRespone = dataResult.getString(Constant.LINK_DOWNLOAD);
+                                Log.i(Constant.TAG, "handleGetLinkByKey " + mLinkRespone);
+                            }else {
+                                Toast.makeText(context, "lỗi get link image", Toast.LENGTH_LONG).show();
+                            }
+                        }catch (JSONException e){
+                            e.printStackTrace();
+                        }
                     }
-                });
-                pingHostTask.execute();
-            }
+                }
+            });
+        }else {
+            Toast.makeText(context, "Chưa có file key " + mFileKey , Toast.LENGTH_LONG).show();
         }
+
+        return mLinkRespone;
     }
 
     private String getKeyAfterUpload(String jsonData) {
         JSONObject result;
         JSONObject results;
-        String file_key;
+        String file_key = "";
         try {
             JSONObject jsonObject = new JSONObject(jsonData);
             Log.i(Constant.TAG, "jsonObject" + jsonObject);
             result = jsonObject.getJSONObject(Constant.API_RESPONSE_RESULT);
             results = result.getJSONObject(Constant.API_RESULTS);
             file_key = results.getString(Constant.FILE_KEY);
-            return file_key;
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        
+        return file_key; 
     }
 
 
     class AsyncUpload extends AsyncTask<Void, Integer, Void>{
-        private UploadTimerCountDown mTimer;
         private final String mToken;
         private final String mImgpath;
         private Context context;
         private String mKey;
 
-        AsyncUpload(String imPath, String token){
+        AsyncUpload(String imPath, String token, String mFile){
             this.mImgpath = imPath;
             this.mToken = token;
+            this.mKey = mFile;
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            mTimer = new UploadTimerCountDown(TIME_OUT_UPLOAD, 1000);
-            mTimer.start();
-
             Log.i(Constant.TAG, "onPreExecute mPath "+ mPath + "onPreExecute mApikey " + mApikey);
         }
 
@@ -162,7 +155,7 @@ public class upload {
                         urlConnection.connect();
                         if(urlConnection.getResponseCode() == 200) {
                             String jsonResultUpload;
-                            String fileKey;
+                            String fileKey = "";
                             jsonResultUpload = sendFileToServer(mImgpath, mToken);
                             if (Common.isJSONValid(jsonResultUpload)) {
                                 fileKey = getKeyAfterUpload(jsonResultUpload);
@@ -196,29 +189,6 @@ public class upload {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-//            Log.i(Constant.TAG, "onPostExecute mPath "+ mPath + "onPostExecute mApikey " + mApikey + " file_key " + file_key);
-//            HashMap<String, String> mapQueryParameters = new HashMap<>();
-//            mapQueryParameters.put(Constant.QUERY_FILE_KEY, file_key);
-//            HttpUtils.requestGETMethod(context, SCHEMA, HOST_ISTORAGE, PORT, PATH_GET_LINK, mapQueryParameters, mApikey , new HttpUtils.GetDataCompleted() {
-//                @Override
-//                public void onCompleted(int code, String msg, Object data) {
-//                    handleGetLinkByKey(code, data);
-////                    if(data != null){
-////                        try {
-////                            JSONObject dataResult = ((JSONObject) data).getJSONObject(Constant.API_RESULTS);
-////                            if(code == 0){
-////                                mLinkRespone = dataResult.getString(Constant.LINK_DOWNLOAD);
-////                                mListener.onSuccess(mLinkRespone);
-////                                Log.i(Constant.TAG, "handleGetLinkByKey " + mLinkRespone);
-////                            }else {
-////                                Toast.makeText(context, "lỗi get link image", Toast.LENGTH_LONG).show();
-////                            }
-////                        }catch (JSONException e){
-////                            e.printStackTrace();
-////                        }
-////                    }
-//                }
-//            });
         }
     }
 
@@ -245,7 +215,7 @@ public class upload {
                 JSONObject dataResult = ((JSONObject) json).getJSONObject(Constant.API_RESULTS);
                 if(errorCode == 0){
                     mApikey = dataResult.getString(Constant.TOKEN);
-                    AsyncUpload mAsyncUpload = new AsyncUpload(mPath, mApikey);
+                    AsyncUpload mAsyncUpload = new AsyncUpload(mPath, mApikey, null);
                     mAsyncUpload.execute();
                 }else {
                     Toast.makeText(context, "Lỗi get token", Toast.LENGTH_LONG).show();

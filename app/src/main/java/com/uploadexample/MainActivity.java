@@ -6,27 +6,19 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.listener.onGetLinkResults;
-import com.myupload.upload;
-import org.apache.commons.io.FileUtils;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.myupload.istorage;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private String mPath;
     Button btnTakepictrue, btnget;
     private final int CAM_PIC_REQUEST = 1313;
+    private String mApiKey = "1207d55d8a880040c5ee587b8fef09487043150e";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,8 +36,8 @@ public class MainActivity extends AppCompatActivity {
         btnget.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               String a = new upload(MainActivity.this).getLink();
-               Toast.makeText(MainActivity.this, "get link " + a, Toast.LENGTH_LONG).show();
+             //  String a = new istorage(MainActivity.this).getLink();
+             //  Toast.makeText(MainActivity.this, "get link " + a, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -57,7 +49,10 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == CAM_PIC_REQUEST){
             Uri uri = data.getData();
             String path = getRealPathFromURI(this,uri);
-            new upload(MainActivity.this).setLinkFile(path).upload();
+            new istorage(MainActivity.this)
+                    .setLinkFile(path)
+                    .setToken(mApiKey)
+                    .upload();
         }
     }
 
