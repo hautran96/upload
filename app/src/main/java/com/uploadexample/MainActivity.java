@@ -7,18 +7,20 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
-
+import com.listener.onGetLinkResults;
 import com.myupload.istorage;
+import com.utils.Constant;
+import com.utils.HttpUtils;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements onGetLinkResults, HttpUtils.GetDataCompleted {
 
     Button btnTakepictrue, btnget;
     private final int CAM_PIC_REQUEST = 1313;
-    private String mApiKey = "1207d55d8a880040c5ee587b8fef09487043150e";
+    private String mFileKey = "5fe991604147eb0021563fef";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,8 +38,9 @@ public class MainActivity extends AppCompatActivity {
         btnget.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-             //  String a = new istorage(MainActivity.this).getLink();
-             //  Toast.makeText(MainActivity.this, "get link " + a, Toast.LENGTH_LONG).show();
+                new istorage(MainActivity.this)
+                       .setFileKey(mFileKey)
+                       .getLink(MainActivity.this);
             }
         });
     }
@@ -49,10 +52,11 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == CAM_PIC_REQUEST){
             Uri uri = data.getData();
             String path = getRealPathFromURI(this,uri);
+            String mApiKey = "02e08d931ddaf543c20465b1b8b73ce3df20546d";
             new istorage(MainActivity.this)
                     .setLinkFile(path)
                     .setToken(mApiKey)
-                    .upload();
+                    .upload(this);
         }
     }
 
@@ -67,5 +71,17 @@ public class MainActivity extends AppCompatActivity {
             return cursor.getString(column_index);
         }
         return null;
+    }
+
+    @Override
+    public void onSuccess(String link) {
+        // return key image upload
+        Log.i(Constant.TAG, "mFileKey  " + link);
+    }
+
+    @Override
+    public void onCompleted(String link) {
+        // return link image
+        Log.i(Constant.TAG, "link " + link);
     }
 }

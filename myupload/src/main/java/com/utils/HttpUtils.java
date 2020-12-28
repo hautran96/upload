@@ -43,16 +43,16 @@ public class HttpUtils {
         return domain + uri;
     }
 
-    public static void returnData(final GetDataCompleted callback, final int code, final String message, final Object data) {
+    public static void returnData(final GetDataCompleted callback, final String link) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             public void run() {
-                callback.onCompleted(code, message, data);
+                callback.onCompleted(link);
             }
         });
     }
 
     public interface GetDataCompleted {
-        void onCompleted(int code, String msg, Object data);
+        void onCompleted(String link);
     }
 
     public static OkHttpClient getUnsafeOkHttpClient() {
@@ -141,12 +141,12 @@ public class HttpUtils {
                                 message = context.getString(R.string.message_problem_connect_to_server);
                             }
 
-                            HttpUtils.returnData(getDataCompleted, errorCode, message, null);
+                            HttpUtils.returnData(getDataCompleted, message);
                         }
                     });
                     pingHostTask.execute();
                 } else {
-                    HttpUtils.returnData(getDataCompleted, e.hashCode(), context.getString(R.string.message_no_internet_connection), null);
+                    HttpUtils.returnData(getDataCompleted, context.getString(R.string.message_no_internet_connection));
                 }
             }
 
@@ -155,6 +155,7 @@ public class HttpUtils {
                 int code = 1;
                 String msg = "Error";
                 JSONObject result = new JSONObject();
+                String link = "";
                 try {
                     String jsonResultString = response.body().string();
                     Log.i(Constant.TAG, "result json: " + jsonResultString);
@@ -162,81 +163,16 @@ public class HttpUtils {
 
                     result = jsonObjectData.getJSONObject(Constant.API_RESPONSE_RESULT);
                     code = result.getInt(Constant.API_ERROR_CODE);
-                    msg = result.getString(Constant.API_MESSAGE);
+//                    msg = result.getString(Constant.API_MESSAGE);
+                    if(code == 0){
+                        JSONObject results = result.getJSONObject(Constant.API_RESULTS);
+                        link = results.getString(Constant.LINK_DOWNLOAD);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                HttpUtils.returnData(getDataCompleted, code, msg, result);
+                HttpUtils.returnData(getDataCompleted, link);
             }
         });
-    }
-
-    public static void requestPOSTMethod(final Context context, String schema, String host, int port, String pathSegment, String bodyJson,
-                                         final HttpUtils.GetDataCompleted getDataCompleted) {
-
-        HttpUrl.Builder builder = new HttpUrl.Builder();
-        builder.scheme(schema);
-        builder.host(host);
-        if (port > 0) {
-            builder.port(port);
-        }
-        builder.addPathSegments(pathSegment);
-
-        HttpUrl url = builder.build();
-
-        Log.i(Constant.TAG, "Url POST method: " + url);
-        Log.i(Constant.TAG, "json post" + bodyJson);
-
-        RequestBody body = RequestBody.create(Constant.JSON, bodyJson);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-
-        mClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if (Common.isNetworkAvailable(context)) {
-                    final int errorCode = e.hashCode();
-                    PingHostTask pingHostTask = new PingHostTask(context, new AsyncTaskCompleteListener<Boolean>() {
-                        @Override
-                        public void onTaskComplete(Boolean result) {
-                            String message;
-                            if (result) {
-                                message = context.getString(R.string.msg_network_warning);
-                            } else {
-                                message = context.getString(R.string.message_problem_connect_to_server);
-                            }
-
-                            HttpUtils.returnData(getDataCompleted, errorCode, message, null);
-                        }
-                    });
-                    pingHostTask.execute();
-                } else {
-                    HttpUtils.returnData(getDataCompleted, e.hashCode(), context.getString(R.string.message_no_internet_connection), null);
-                }
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                int code = 1;
-                String msg = "Error";
-                JSONObject result = new JSONObject();
-                try {
-                    String jsonResultString = response.body().string();
-
-                    Log.i(Constant.TAG, "result json: " + jsonResultString);
-                    JSONObject jsonObjectData = new JSONObject(jsonResultString);
-
-                    result = jsonObjectData.getJSONObject(Constant.API_RESPONSE_RESULT);
-                    code = result.getInt(Constant.API_ERROR_CODE);
-                    msg = result.getString(Constant.API_MESSAGE);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                HttpUtils.returnData(getDataCompleted, code, msg, result);
-            }
-        });
-
     }
 }

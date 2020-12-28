@@ -1,5 +1,5 @@
 package com.listener;
 
 public interface onGetLinkResults {
-    void onSuccess(String link);
+    public void onSuccess(String link);
 }

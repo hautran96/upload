@@ -13,8 +13,6 @@
         android:layout_height="wrap_content"
         android:text="take pictrue"
         android:id="@+id/buttonTake" />
-
-
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
