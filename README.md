@@ -17,19 +17,19 @@ Thêm mã bên dưới vào mô-đun build.gradle dependency
     
 # Usage
 
-    new istorage(MainActivity.this)
+    new istorage("truyền vào Context")
     
 Truyền đường dẫn từ hình ảnh từ máy
     
-    new istorage(MainActivity.this).setLinkFile(path)
+    new istorage("context").setLinkFile(path)
     
 Truyền token api
 
-    new istorage(MainActivity.this).setToken(mApiKey)
+    new istorage("context").setApiKey("api key")
     
 Upload hình ảnh 
 
-    new istorage(MainActivity.this).upload(this);
+    new istorage("context").upload("callback function");
  
 Nếu bạn sử dụng chức năng upload thì bận cần phải implements onGetLinkResults: 
 
@@ -43,13 +43,13 @@ Nếu bạn sử dụng chức năng upload thì bận cần phải implements o
     
 Getlink 
 
-    new istorage(MainActivity.this)
+    new istorage("context")
                .setFileKey(mFileKey)
-               .getLink(MainActivity.this);
+               .getLink("callback function");
                
 Truyền filekey đã upload ở chức năng upload để lấy link hình ảnh
 
-     new istorage(MainActivity.this)
+     new istorage("context")
                .setFileKey(mFileKey)
                
 
