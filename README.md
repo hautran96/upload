@@ -17,7 +17,7 @@ Thêm mã bên dưới vào mô-đun build.gradle dependency
     
 # Usage
 
-    new istorage("truyền vào Context")
+    new istorage(context, callback upload, callback getlink)
     
 Truyền đường dẫn từ hình ảnh từ máy
     
@@ -25,11 +25,11 @@ Truyền đường dẫn từ hình ảnh từ máy
     
 Truyền token api
 
-    new istorage("context").setApiKey("api key")
+    new istorage(context, callback upload, callback getlink).setApiKey("api key")
     
 Upload hình ảnh 
 
-    new istorage("context").upload("callback function");
+    new istorage(context, callback upload, callback getlink).upload();
  
 Nếu bạn sử dụng chức năng upload thì bận cần phải implements onGetLinkResults: 
 
@@ -43,16 +43,9 @@ Nếu bạn sử dụng chức năng upload thì bận cần phải implements o
     
 Getlink 
 
-    new istorage("context")
-               .setFileKey(mFileKey)
-               .getLink("callback function");
+    new istorage(context, callback upload, callback getlink).getLink("file key");
                
-Truyền filekey đã upload ở chức năng upload để lấy link hình ảnh
-
-     new istorage("context")
-               .setFileKey(mFileKey)
                
-
  Nếu bạn sử dụng chức năng getlink thì bận cần phải implements HttpUtils.GetDataCompleted
  
       public class MainActivity extends AppCompatActivity implements HttpUtils.GetDataCompleted
@@ -66,17 +59,16 @@ Truyền filekey đã upload ở chức năng upload để lấy link hình ản
 
   upload: 
   
-     new istorage(MainActivity.this)
-               .setLinkFile(path)
-               .setToken(mApiKey)
-               .upload(this);
+     new istorage(MainActivity.this, this, null)
+                    .setLinkFile(path)
+                    .setApiKey(mApiKey)
+                    .upload();
                
                
   getlink: 
   
-    new istorage(MainActivity.this)
-                 .setFileKey(mFileKey)
-                 .getLink(MainActivity.this);
+    new istorage(MainActivity.this, null, MainActivity.this)
+                        .getLink(mFileKey);
  
     
     
