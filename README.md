@@ -21,7 +21,7 @@ Thêm mã bên dưới vào mô-đun build.gradle dependency
     
 Truyền đường dẫn từ hình ảnh từ máy
     
-    new istorage("context").setLinkFile(path)
+    new istorage(context, callback upload, callback getlink).setLinkFile(path)
     
 Truyền token api
 
