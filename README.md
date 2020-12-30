@@ -17,7 +17,7 @@ Thêm mã bên dưới vào mô-đun build.gradle dependency
     
 # Usage
 
-     Istorage istorage =  new Istorage.IstorageBuilder(this, this, this)
+     Istorage istorage =  new Istorage.IstorageBuilder("context","callback upload", "callback getlink")
                 .setApiKey(mApiKey)
                 .build();
     
@@ -55,20 +55,16 @@ Getlink
  
 # Example
 
+  build: 
+  
+    Istorage istorage =  new Istorage.IstorageBuilder("context","callback upload", "callback getlink")
+                .setApiKey(mApiKey)
+                .build();
+
   upload: 
-  
-     Istorage istorage =  new Istorage.IstorageBuilder(this, this, this)
-                .setApiKey(mApiKey)
-                .build();
+
      istorage.upload(path);
-               
-               
+                          
   getlink: 
-  
-    Istorage istorage =  new Istorage.IstorageBuilder(this, this, this)
-                .setApiKey(mApiKey)
-                .build();
-    istorage.getlink(mFileKey);
  
-    
-    
+    istorage.getlink(mFileKey);
