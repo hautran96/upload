@@ -44,7 +44,7 @@ Getlink
     istorage.getLink(mFileKey); // truyền vào file key để lấy link ảnh
                
                
- Nếu bạn sử dụng chức năng getlink thì bận cần phải implements HttpUtils.GetDataCompleted
+ Nếu bạn sử dụng chức năng getlink thì bạn cần phải implements HttpUtils.GetDataCompleted
  
       public class MainActivity extends AppCompatActivity implements HttpUtils.GetDataCompleted
      @Override
