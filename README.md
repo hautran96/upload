@@ -17,19 +17,17 @@ Thêm mã bên dưới vào mô-đun build.gradle dependency
     
 # Usage
 
-    new istorage(context, callback upload, callback getlink)
-    
-Truyền đường dẫn từ hình ảnh từ máy
-    
-    new istorage(context, callback upload, callback getlink).setLinkFile(path)
+     Istorage istorage =  new Istorage.IstorageBuilder(this, this, this)
+                .setApiKey(mApiKey)
+                .build();
     
 Truyền token api
 
-    new istorage(context, callback upload, callback getlink).setApiKey("api key")
+    istorage.setApiKey(mApiKey)
     
 Upload hình ảnh 
 
-    new istorage(context, callback upload, callback getlink).upload();
+    istorage.upload("path image"); // truyền vào đường dẫn tới file hình ảnh
  
 Nếu bạn sử dụng chức năng upload thì bận cần phải implements onGetLinkResults: 
 
@@ -43,7 +41,7 @@ Nếu bạn sử dụng chức năng upload thì bận cần phải implements o
     
 Getlink 
 
-    new istorage(context, callback upload, callback getlink).getLink("file key");
+    istorage.getLink(mFileKey); // truyền vào file key để lấy link ảnh
                
                
  Nếu bạn sử dụng chức năng getlink thì bận cần phải implements HttpUtils.GetDataCompleted
@@ -59,16 +57,18 @@ Getlink
 
   upload: 
   
-     new istorage(MainActivity.this, this, null)
-                    .setLinkFile(path)
-                    .setApiKey(mApiKey)
-                    .upload();
+     Istorage istorage =  new Istorage.IstorageBuilder(this, this, this)
+                .setApiKey(mApiKey)
+                .build();
+     istorage.upload(path);
                
                
   getlink: 
   
-    new istorage(MainActivity.this, null, MainActivity.this)
-                        .getLink(mFileKey);
+    Istorage istorage =  new Istorage.IstorageBuilder(this, this, this)
+                .setApiKey(mApiKey)
+                .build();
+    istorage.getlink(mFileKey);
  
     
     
