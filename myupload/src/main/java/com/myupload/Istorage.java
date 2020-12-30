@@ -2,12 +2,14 @@ package com.myupload;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
-import com.listener.onGetLinkResults;
+import com.listener.AsyncTaskCompleteListener;
+import com.listener.onGetResults;
+import com.service.PingHostTask;
 import com.utils.Common;
 import com.utils.Constant;
 import com.utils.HttpUtils;
@@ -26,56 +28,68 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class istorage {
-    Context context;
-    private String mPath;
-    private String mApikey = "02e08d931ddaf543c20465b1b8b73ce3df20546d";
-    private String mFileKey;
+public class Istorage {
+    private final Context context;
+    private final String mApikey;
+    private String mStatus;
     private static final String SCHEMA = "http";
     private static final String HOST_ISTORAGE = Constant.HOST;
-    private static final String PATH_GET_TOKEN = "api/partner/getAccessToken";
     private static final String PATH_GET_LINK = "api/partner/getFileByKey";
     private static final int PORT = 0;
-    private String mLinkRespone;
+    private final onGetResults mcallback;
     public final int TIME_OUT_UPLOAD = 720 * 1000; // 12 minutes
 
-    public istorage(Context context){
+    public Istorage(Context context, onGetResults upload, String mApikey){
         this.context = context;
+        this.mcallback = upload;
+        this.mApikey = mApikey;
     }
 
-    public istorage setLinkFile(String mPath){
-        this.mPath = mPath;
-        return this;
+    public static class IstorageBuilder{
+        private String mApikey;
+        private final onGetResults mcallback;
+        private final Context mcontext;
+
+        public IstorageBuilder(Context context, onGetResults callback){
+            this.mcontext = context;
+            this.mcallback = callback;
+        }
+
+        public IstorageBuilder setApiKey(String apikey){
+            this.mApikey = apikey;
+            return this;
+        }
+
+        public Istorage build(){
+            validateApiKey();
+            Istorage istorage = new Istorage(this.mcontext, this.mcallback, this.mApikey);
+            return istorage;
+        }
+
+        private void validateApiKey() {
+            if (this.mApikey == null) {
+                throw new IllegalArgumentException("Apikey is null");
+            }
+        }
     }
 
-    public istorage setToken(String token){
-        this.mApikey = token;
-        return this;
-    }
-
-    public istorage setFileKey(String fileKey){
-        this.mFileKey = fileKey;
-        return this;
-    }
-
-    public void upload(onGetLinkResults callback){
+    public void upload(String mPath){
             if(mPath != null){
-                AsyncUpload mAsyncUpload = new AsyncUpload(context, mPath, mApikey, null, callback);
+                AsyncUpload mAsyncUpload = new AsyncUpload(context, mPath, mApikey, null, mcallback);
                 mAsyncUpload.execute();
             } else  {
-                Toast.makeText(context, "upload " + mPath, Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "mPath " + mPath, Toast.LENGTH_LONG).show();
             }
     }
 
 
-    public void getLink(HttpUtils.GetDataCompleted callback){
-        final String[] result = new String[1];
-        if(mFileKey != null){
+    public void getLink(String fileKey){
+        if(fileKey != null){
             HashMap<String, String> mapQueryParameters = new HashMap<>();
-            mapQueryParameters.put(Constant.QUERY_FILE_KEY, mFileKey);
-            HttpUtils.requestGETMethod(context, SCHEMA, HOST_ISTORAGE, PORT, PATH_GET_LINK, mapQueryParameters, mApikey, callback);
+            mapQueryParameters.put(Constant.QUERY_FILE_KEY, fileKey);
+            HttpUtils.requestGETMethod(context, SCHEMA, HOST_ISTORAGE, PORT, PATH_GET_LINK, mapQueryParameters, mApikey, mcallback);
         } else {
-            Toast.makeText(context, "Chưa có file key " + mFileKey , Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Chưa có file key " + fileKey , Toast.LENGTH_LONG).show();
         }
     }
 
@@ -92,7 +106,34 @@ public class istorage {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return file_key; 
+        return file_key;
+    }
+
+    private class UploadTimerCountDown extends CountDownTimer {
+        private UploadTimerCountDown(long millisInFuture, long countDownInterval) {
+            super(millisInFuture, countDownInterval);
+        }
+
+        @Override
+        public void onTick(long l) {
+        }
+
+        @Override
+        public void onFinish() {
+            if(Common.isNetworkAvailable(context)) {
+                PingHostTask pingHostTask = new PingHostTask(context, new AsyncTaskCompleteListener<Boolean>() {
+                    @Override
+                    public void onTaskComplete(Boolean result) {
+                        if (result) {
+                            mStatus = context.getString(R.string.msg_network_warning);
+                        } else {
+                            mStatus = context.getString(R.string.message_problem_connect_to_server);
+                        }
+                    }
+                });
+                pingHostTask.execute();
+            }
+        }
     }
 
 
@@ -101,9 +142,10 @@ public class istorage {
         private final String mImgpath;
         private String mKey;
         private Context mContext;
-        private onGetLinkResults mCallback;
+        private onGetResults mCallback;
+        private UploadTimerCountDown mTimer;
 
-        AsyncUpload(Context context,String imPath, String token, String mFile, onGetLinkResults callback){
+        AsyncUpload(Context context,String imPath, String token, String mFile, onGetResults callback){
             this.mContext = context;
             this.mImgpath = imPath;
             this.mToken = token;
@@ -114,12 +156,12 @@ public class istorage {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            Log.i(Constant.TAG, "onPreExecute mPath "+ mPath + "onPreExecute mApikey " + mApikey);
+            mTimer = new UploadTimerCountDown(TIME_OUT_UPLOAD, 1000);
+            mTimer.start();
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            Log.i(Constant.TAG, "doInBackground mPath "+ mPath + "doInBackground mApikey " + mApikey);
             boolean isConnectSuccess = false;
             do {
                 if(isCancelled()) {
@@ -164,9 +206,16 @@ public class istorage {
         }
 
         @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            mTimer.cancel();
+        }
+
+        @Override
         protected void onPostExecute(Object o) {
+            mTimer.cancel();
             super.onPostExecute(o);
-            mCallback.onSuccess(mKey);
+            mCallback.onUpload(mStatus,mKey);
         }
     }
 

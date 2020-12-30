@@ -10,23 +10,28 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import com.listener.onGetLinkResults;
-import com.myupload.istorage;
+
+import com.listener.onGetResults;
+import com.myupload.Istorage;
 import com.utils.Constant;
-import com.utils.HttpUtils;
 
 
-public class MainActivity extends AppCompatActivity implements onGetLinkResults, HttpUtils.GetDataCompleted {
+public class MainActivity extends AppCompatActivity implements onGetResults {
 
     Button btnTakepictrue, btnget;
+    private Istorage istorage;
     private final int CAM_PIC_REQUEST = 1313;
-    private String mFileKey = "5fe991604147eb0021563fef";
+    private final String mFileKey = "5fe991604147eb0021563fef";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnTakepictrue = findViewById(R.id.buttonTake);
         btnget = findViewById(R.id.btn_getLink);
+        String mApiKey = "05af5c31967932f4edf565ba26889ac6b75abab7";
+        istorage =  new Istorage.IstorageBuilder(this, this)
+                .setApiKey(mApiKey)
+                .build();
         btnTakepictrue.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -38,13 +43,10 @@ public class MainActivity extends AppCompatActivity implements onGetLinkResults,
         btnget.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new istorage(MainActivity.this)
-                       .setFileKey(mFileKey)
-                       .getLink(MainActivity.this);
+               istorage.getLink(mFileKey);
             }
         });
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -52,11 +54,7 @@ public class MainActivity extends AppCompatActivity implements onGetLinkResults,
         if(requestCode == CAM_PIC_REQUEST){
             Uri uri = data.getData();
             String path = getRealPathFromURI(this,uri);
-            String mApiKey = "02e08d931ddaf543c20465b1b8b73ce3df20546d";
-            new istorage(MainActivity.this)
-                    .setLinkFile(path)
-                    .setToken(mApiKey)
-                    .upload(this);
+            istorage.upload(path);
         }
     }
 
@@ -74,14 +72,12 @@ public class MainActivity extends AppCompatActivity implements onGetLinkResults,
     }
 
     @Override
-    public void onSuccess(String link) {
-        // return key image upload
-        Log.i(Constant.TAG, "mFileKey  " + link);
+    public void onUpload(String mes, String key) {
+        Log.i(Constant.TAG, "mes " + mes + " link " + key);
     }
 
     @Override
-    public void onCompleted(String link) {
-        // return link image
-        Log.i(Constant.TAG, "link " + link);
+    public void onGetLink(int code, String link) {
+        Log.i(Constant.TAG, "code " + code + " link " + link);
     }
 }

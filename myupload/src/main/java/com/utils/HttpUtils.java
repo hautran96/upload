@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.listener.AsyncTaskCompleteListener;
+import com.listener.onGetResults;
 import com.myupload.R;
 import com.service.PingHostTask;
 
@@ -43,17 +44,14 @@ public class HttpUtils {
         return domain + uri;
     }
 
-    public static void returnData(final GetDataCompleted callback, final String link) {
+    public static void returnData(onGetResults callback,final int code, final String link) {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             public void run() {
-                callback.onCompleted(link);
+                callback.onGetLink(code,link);
             }
         });
     }
 
-    public interface GetDataCompleted {
-        void onCompleted(String link);
-    }
 
     public static OkHttpClient getUnsafeOkHttpClient() {
         try {
@@ -98,7 +96,7 @@ public class HttpUtils {
 
 
     public static void requestGETMethod(final Context context, String schema, String host, int port, String pathSegment, HashMap<String, String> queryParameter, String apiKey,
-                                        final HttpUtils.GetDataCompleted getDataCompleted) {
+                                        onGetResults callback) {
 
         HttpUrl.Builder builder = new HttpUrl.Builder();
         builder.scheme(schema);
@@ -141,12 +139,12 @@ public class HttpUtils {
                                 message = context.getString(R.string.message_problem_connect_to_server);
                             }
 
-                            HttpUtils.returnData(getDataCompleted, message);
+                            HttpUtils.returnData(callback,errorCode, message);
                         }
                     });
                     pingHostTask.execute();
                 } else {
-                    HttpUtils.returnData(getDataCompleted, context.getString(R.string.message_no_internet_connection));
+                    HttpUtils.returnData(callback, e.hashCode() ,context.getString(R.string.message_no_internet_connection));
                 }
             }
 
@@ -163,15 +161,16 @@ public class HttpUtils {
 
                     result = jsonObjectData.getJSONObject(Constant.API_RESPONSE_RESULT);
                     code = result.getInt(Constant.API_ERROR_CODE);
-//                    msg = result.getString(Constant.API_MESSAGE);
                     if(code == 0){
                         JSONObject results = result.getJSONObject(Constant.API_RESULTS);
                         link = results.getString(Constant.LINK_DOWNLOAD);
+                    }else {
+                        link = result.getString(Constant.API_MESSAGE);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                HttpUtils.returnData(getDataCompleted, link);
+                HttpUtils.returnData(callback,code, link);
             }
         });
     }
