@@ -44,9 +44,9 @@ bạn cần phải implements onGetResults
         Log.i(Constant.TAG, "link " + key);
     }
 
-    @Override
-    public void onGetLink(String link) {
-        Log.i(Constant.TAG, "link " + link);
+     @Override
+    public void onGetLink(int code, String link) {
+        Log.i(Constant.TAG, "code " + code + " link " + link);
     }
  
 # Example
