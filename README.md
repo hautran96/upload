@@ -12,7 +12,7 @@ Thêm mã bên dưới vào thư mục gốc build.gradle
       }
     }
 
-Thêm mã bên dưới vào mô-đun build.gradle dependency và chọn sync now (dùng để tải thư viện từ kho github)
+Thêm mã bên dưới vào module build.gradle dependency và chọn sync now (dùng để tải thư viện từ kho github)
 
     implementation 'com.github.hautran96:upload:1.0'
     
