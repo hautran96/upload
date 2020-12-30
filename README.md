@@ -35,7 +35,8 @@ Getlink
     istorage.getLink(mFileKey); // truyền vào file key để lấy link ảnh
                
                
-bạn cần phải implements onGetResults
+bạn cần phải implements onGetResults sau khi upload xong thì fileKey sẽ trả về hàm onUpload 
+khi getlink thì link image sẽ trả về hàm onGetlink:
  
     public class MainActivity extends AppCompatActivity implements onGetResults;
     
